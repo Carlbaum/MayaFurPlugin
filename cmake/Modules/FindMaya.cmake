@@ -31,7 +31,7 @@ if(WIN32)
 elseif(APPLE)
     # Apple
     set(MAYA_INSTALL_BASE_DEFAULT /Applications/Autodesk)
-    set(MAYA_INC_SUFFIX "/include")
+    set(MAYA_INC_SUFFIX "devkit/include")
     set(MAYA_LIB_SUFFIX "Maya.app/Contents/MacOS")
     set(MAYA_BIN_SUFFIX "Maya.app/Contents/bin/")
     set(MAYA_COMPILE_DEFINITIONS "${MAYA_COMPILE_DEFINITIONS};OSMac_")

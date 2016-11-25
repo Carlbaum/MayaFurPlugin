@@ -1,3 +1,6 @@
+# Get rid of warning
+set(CMAKE_MACOSX_RPATH 1)
+
 cmake_minimum_required(VERSION 2.8)
 project(mayafurplugin)
 

@@ -2,6 +2,7 @@ file(GLOB SOURCE_FILES *.cpp)
 
 find_package(Maya REQUIRED)
 include_directories(${MAYA_INCLUDE_DIR})
+include_directories(../include)
 link_directories(${MAYA_LIBRARY_DIR})
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})

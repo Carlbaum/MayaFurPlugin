@@ -1,4 +1,3 @@
-
 #include <math.h>
 #include <maya/MIOStream.h>
 #include <maya/MSimple.h>
@@ -6,32 +5,28 @@
 #include <maya/MPointArray.h>
 #include <maya/MDoubleArray.h>
 #include <maya/MFnNurbsCurve.h>
+#include "common.h"
+#include <vector>
 DeclareSimpleCommand( doHelix, "Autodesk - Example", "2017");
 MStatus doHelix::doIt( const MArgList& )
 {
     MStatus stat;
-    const unsigned deg = 1; // Curve Degree
-    const unsigned ncvs = 10; // Number of CVs
-    const unsigned spans = ncvs - deg; // Number of spans
-    const unsigned nknots = spans+2*deg-1; // Number of knots
-    double radius = 1.0; // Helix radius
-    double pitch = 0.5; // Helix pitch
-    unsigned i;
-    MPointArray controlVertices;
-    MDoubleArray knotSequences;
-    // Set up cvs and knots for the helix
-    //
-    for (i = 0; i < ncvs; i++)
-        controlVertices.append( MPoint( radius * cos( (double)i ),
-        pitch * (double)i, radius * sin( (double)i ) ) );
-    for (i = 0; i < nknots; i++)
-        knotSequences.append( (double)i );
-    // Now create the curve
-    //
+    const unsigned num_segments = 10;
+    float strand_length = 10.f;
+    cout << "hej hoppppppppp.\n";
+    Strand* strand_0 = new Strand(
+  			MPoint( 0.0, 0.0, 0.0 ),
+  			num_segments,
+  			MVector( 0,-1,0 ),
+  			15.f );
+    cout << "KALAS!!.\n";
     MFnNurbsCurve curveFn;
-    MObject curve = curveFn.create( controlVertices,
-        knotSequences, deg, MFnNurbsCurve::kOpen, false, false, MObject::kNullObj, &stat );
+    MObject curve = curveFn.create( strand_0->point_positions,
+        strand_0->knot_sequences, strand_0->degree, MFnNurbsCurve::kOpen, false, false, MObject::kNullObj, &stat );
+    cout << "FANTASTISKT.\n";
     if ( MS::kSuccess != stat )
         cout << "Error creating curve.\n";
+    delete strand_0;
+    cout << "Fur plugin exited normally!\n";
     return stat;
 }

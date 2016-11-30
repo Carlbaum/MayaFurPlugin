@@ -39,21 +39,28 @@ struct Strand {
   const unsigned degree;
   std::vector<std::vector<Spring*> > springs; //this should probably be used
 
+  std::vector<MVector> velocities;
+  std::vector<MVector> forces;
+  MFnNurbsCurve curve;
+
+
 	// Constructors
 	Strand( MPoint root_point,
-			int segments, // number of edge springs
-			MVector direction,
-			float strand_length = 1.0f,
-			const unsigned deg = 1 ) :
-					degree(deg) {
+					int segments, // number of edge springs
+					MVector direction,
+					float strand_length = 1.0f,
+					const unsigned deg = 1 ) :
+							degree(deg)
+	{
 
 		cout << "Strand constructor!\n";
 		// Create root
 		MVector delta_position = ( strand_length / segments ) * direction;
 		cout << "Strand constructor2!\n";
 
-		// Create the mass points
+		// Create the root mass point
 		point_positions.append( root_point );
+
 		knot_sequences.append( (double)0 );
 		for (int i = 1 ; i < segments + 1 ; i++) {
 			cout << "\tStrand constructor loop " << i << "\n";
@@ -71,7 +78,24 @@ struct Strand {
 	}
 
 	~Strand() {
-		cout << "Strand destructor is called!\n";
+		cout << "Strand destructor is called! Strand contains " << springs.size() << " points\n";
+		// for each point
+		for (int p = 0; p < springs.size(); ++p) {
+			cout << "\tPoint #" << p;
+			cout << ", has " << springs[p].size() << " springs\n";
+			// for each spring
+			while(!springs[p].empty()) {
+        delete springs[p].back();
+        springs[p].pop_back();
+        cout << "\t\tSpring has been deleted! It now has " << springs[p].size() << " springs\n";
+    	}
+			/*for (int s = springs[p].size()-1; s >= 0 ; --s) {
+				cout << "\t\tSpring #" << s << " is deleted";
+				delete springs[p][s];
+				springs[p][s].pop_back();
+				cout << ", now has " << springs[p].size() << " springs\n";
+			}*/
+		}
 	}
 };
 

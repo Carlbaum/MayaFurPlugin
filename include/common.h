@@ -1,26 +1,35 @@
 #include <cmath>
 #include <maya/MPoint.h>
 #include <maya/MPointArray.h>
+#include <maya/MVectorArray.h>
 #include <maya/MDoubleArray.h>
-#include <maya/MFloatArray.h>
 #include <maya/MFnNurbsCurve.h>
 #include <vector>
 #include <maya/MIOStream.h>
-#include <maya/MSimple.h>
+
+// Macro for debugging
+#define McheckErr(stat, msg)  \
+  if (MS::kSuccess != stat) { \
+    cerr << msg;              \
+    return MS::kFailure;      \
+  }
 
 struct Spring {
-	MPoint *p1;
-	MPoint *p2;
+	unsigned p1;
+	unsigned p2;
 	float rest_length;
 	float stiffness; // could be named spring_constant
 	// Contructors
-	Spring( MPoint *point_1, MPoint *point_2, float rest_length = 1.f, float spring_constant = 1.f ) :
-					p1(point_1),
-					p2(point_2),
-					rest_length(rest_length),
-					stiffness(spring_constant) {}
+  Spring(unsigned point_1,
+         unsigned point_2,
+         float rest_length = 1.f,
+         float spring_constant = 25.f)
+      : p1(point_1),
+        p2(point_2),
+        rest_length(rest_length),
+        stiffness(spring_constant) {}
 
-	// Public methods
+// Public methods
 /*	void CalculateSpringForce() {
 		MVector relative_vector = *p2 - *p1;
 		float current_length = relative_vector.length();
@@ -32,50 +41,68 @@ struct Spring {
 };
 
 struct Strand {
-  MPointArray point_positions;
-  MDoubleArray knot_sequences;
   // MFloatArray masses;
   // std::vector<Spring*> edge_springs;
-  const unsigned degree;
   std::vector<std::vector<Spring*> > springs; //this should probably be used
 
-  std::vector<MVector> velocities;
-  std::vector<MVector> forces;
-  MFnNurbsCurve curve;
+  MVectorArray velocities;
+  MVectorArray forces;
+  MObject curve_obj;
+  MFnNurbsCurve curve_fn;
 
 
 	// Constructors
-	Strand( MPoint root_point,
-					int segments, // number of edge springs
-					MVector direction,
-					float strand_length = 1.0f,
-					const unsigned deg = 1 ) :
-							degree(deg)
-	{
+  Strand(MPoint root_point,
+         int segments,  // number of edge springs
+         MVector direction,
+         float strand_length = 1.0f,
+         const unsigned degree = 1,
+         float curviness = 1.5f,
+         float curliness = 1.5f) {
+    cout << "Strand constructor!\n";
+    MStatus stat;
+    float segment_length = (strand_length / segments);
+    MVector delta_position = segment_length * direction;
 
-		cout << "Strand constructor!\n";
-		// Create root
-		MVector delta_position = ( strand_length / segments ) * direction;
-		cout << "Strand constructor2!\n";
+    MPointArray point_positions;
+    MDoubleArray knot_sequences;
+    // Create the root mass point
+    point_positions.append(root_point);
+    knot_sequences.append((double)0);
+    velocities.append(MVector(0,0,0));
+    forces.append(MVector(0,0,0));
 
-		// Create the root mass point
-		point_positions.append( root_point );
+    for (int i = 1; i < segments + 1; i++) {
+      point_positions.append( root_point + i * delta_position );
+      knot_sequences.append((double)i);
+      std::vector<Spring*> springs_attached_to_point;
+      springs_attached_to_point.push_back(
+          new Spring(i - 1, i, segment_length, 20 * (segments + 1 - i)));
+      if (/*false &&*/ i > 1) {
+        springs_attached_to_point.push_back(
+            new Spring(i - 2, i, segment_length * curviness , 35 * (segments + 1 - i)));
+				if (false && i > 2) {
+       		springs_attached_to_point.push_back(
+            	new Spring(i - 3, i, segment_length * curviness , 60 * (segments + 1 - i)));
+      	}
+      }
 
-		knot_sequences.append( (double)0 );
-		for (int i = 1 ; i < segments + 1 ; i++) {
-			cout << "\tStrand constructor loop " << i << "\n";
-			cout << "\t\tLength" << point_positions.length() << "\n";
-			point_positions.append( root_point + i * delta_position );
-			knot_sequences.append( (double)i );
-			cout << "\t\tPos x: " << point_positions[i] << "\n";
-			// edge_springs.push_back( new Spring( &point_positions[i-1], &point_positions[i] ) );
-			// springs[i].push_back( new Spring( &point_positions[i-1], &point_positions[i] ) );
-			std::vector<Spring*> springs_attached_to_point;
-			springs_attached_to_point.push_back( new Spring( &point_positions[i-1], &point_positions[i] ) );
-			springs.push_back( springs_attached_to_point );
-		}
-		cout << "Strand constructor, EXIT!\n";
-	}
+
+      springs.push_back(springs_attached_to_point);
+
+      velocities.append(MVector(0,0,0));
+      forces.append(MVector(0,0,0));
+    }
+		curve_obj = curve_fn.create/*WithEditPoints*/(
+        point_positions, knot_sequences, degree, MFnNurbsCurve::kOpen, false,
+        false /*, false*/, MObject::kNullObj, &stat);
+    if (stat != MS::kSuccess) {
+    	cerr << "Strand Constructor FAILED!!!!!!\n";
+    } else {
+    	cout << "NumSegments: " << segments << ",\tNumPoints" << curve_fn.numCVs() << "\n";
+    }
+    cout << "Strand constructor, EXIT!\n";
+  }
 
 	~Strand() {
 		cout << "Strand destructor is called! Strand contains " << springs.size() << " points\n";
@@ -89,14 +116,20 @@ struct Strand {
         springs[p].pop_back();
         cout << "\t\tSpring has been deleted! It now has " << springs[p].size() << " springs\n";
     	}
-			/*for (int s = springs[p].size()-1; s >= 0 ; --s) {
-				cout << "\t\tSpring #" << s << " is deleted";
-				delete springs[p][s];
-				springs[p][s].pop_back();
-				cout << ", now has " << springs[p].size() << " springs\n";
-			}*/
+		}
+	}
+
+	void UpdateVelocitiesAndPositions() {
+		for (int i = 1 ; i < curve_fn.numCVs(); i++) {
+			cout << "\t\t\tVel_prev: " << velocities[i];
+			velocities[i] += 0.01 * forces[i] / 1; // assumes ∆t=0.1 and mass = 1
+			cout << "\n\t\t\t\tVel_post: " << velocities[i] << "\n";
+			MPoint prev_position;
+			curve_fn.getCV(i,prev_position);
+			cout << "\t\t\tPos_prev: " << prev_position;
+			MPoint new_position = prev_position + 0.01 * velocities[i];
+			curve_fn.setCV(i, new_position);
+			cout << "\n\t\t\t\tPos_post: " << new_position << "\n";
 		}
 	}
 };
-
-// TODO: destructors for all structs using new

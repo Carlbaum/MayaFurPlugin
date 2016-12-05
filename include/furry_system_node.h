@@ -12,7 +12,6 @@
 
 #include <maya/MFnUnitAttribute.h>
 #include <maya/MFnTypedAttribute.h>
-#include <maya/MFnGenericAttribute.h>
 
 // Simple deformer node
 class FurrySystemNode : public MPxNode {

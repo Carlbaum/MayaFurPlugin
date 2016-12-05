@@ -12,6 +12,7 @@
 
 #include <maya/MFnUnitAttribute.h>
 #include <maya/MFnTypedAttribute.h>
+#include <maya/MFnGenericAttribute.h>
 
 // Simple deformer node
 class FurrySystemNode : public MPxNode {
@@ -22,8 +23,11 @@ public:
 
   static void* creator();
   static MStatus initialize();
+  virtual MStatus compute(const MPlug& plug, MDataBlock& data);
 
   static MTypeId id;
+  static MObject input_curve;
+  static MObject output_curve;
   static MObject time;
 };
 

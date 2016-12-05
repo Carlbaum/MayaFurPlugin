@@ -1,3 +1,6 @@
+#ifndef COMMON_H
+#define COMMON_H
+
 #include <cmath>
 #include <maya/MPoint.h>
 #include <maya/MPointArray.h>
@@ -133,3 +136,5 @@ struct Strand {
 		}
 	}
 };
+
+#endif // COMMON_H

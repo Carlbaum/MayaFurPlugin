@@ -6,7 +6,7 @@ MStatus initializePlugin(MObject obj) {
   MFnPlugin plugin(obj, "Kebaum, Nova, Kingen", "0.1", "Any");
 
   // Create the hair system node
-  status = plugin.registerNode("FurrySystem", FurrySystemNode::id,
+  status = plugin.registerNode("FurrySystemNode", FurrySystemNode::id,
                                FurrySystemNode::creator,
                                FurrySystemNode::initialize);
   CHECK_MSTATUS_AND_RETURN_IT(status);

@@ -7,6 +7,7 @@
 #include <maya/MPoint.h>
 #include <maya/MPointArray.h>
 #include <maya/MDoubleArray.h>
+#include <maya/MVectorArray.h>
 #include <maya/MFnNurbsCurve.h>
 #include "common.h"
 
@@ -27,6 +28,16 @@ public:
   static MObject input_curves;
   static MObject output_curves;
   static MObject time;
+
+  std::vector<std::vector<Spring*> > springs;
+	std::vector<MVectorArray> velocities;
+	std::vector<MVectorArray> forces;
+
+	float hair_length;
+	int num_hair_points;
+	int num_hairs;
+	float curviness;
+	float curliness;
 };
 
 #endif // FURRY_SYSTEM_NODE_H

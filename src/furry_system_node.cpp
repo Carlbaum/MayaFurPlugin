@@ -19,10 +19,12 @@
 #include "furry_system_node.h"
 #include <maya/MFnNurbsCurveData.h>
 #include <maya/MTime.h>
+#include <maya/MMatrix.h>
 
 MObject FurrySystemNode::time;
 MObject FurrySystemNode::input_curves;
 MObject FurrySystemNode::output_curves;
+MObject FurrySystemNode::input_follicles;
 MTypeId FurrySystemNode::id(0x80000);
 
 FurrySystemNode::FurrySystemNode() {
@@ -82,14 +84,23 @@ MStatus FurrySystemNode::initialize() {
   // Create attributes
   MFnUnitAttribute unit_attr;
   MFnTypedAttribute typed_attr;
+  MFnMatrixAttribute matrix_attr;
+
   time = unit_attr.create("time", "tm", MFnUnitAttribute::kTime, 0.0, &stat);
-  input_curves = typed_attr.create("input_curves", "in",
+  input_curves = typed_attr.create("input_curves", "inc",
                                   MFnNurbsCurveData::kNurbsCurve, &stat);
   McheckErr(stat, "Failed to create input curve\n");
   stat = typed_attr.setArray( true );
   McheckErr(stat, "Failed to set input curve array\n");
   typed_attr.setStorable(false);
 
+  // Create follicles input attr
+  input_follicles = matrix_attr.create("input_follicles", "if");
+  stat = matrix_attr.setArray( true );
+  McheckErr(stat, "Failed to create FOLLICLES\n");
+  matrix_attr.setStorable(false);
+
+  // Create ouput curves attribute
   output_curves = typed_attr.create("output_curves", "out",
                                    MFnNurbsCurveData::kNurbsCurve, &stat);
   McheckErr(stat, "Failed to create output curve\n");
@@ -102,16 +113,15 @@ MStatus FurrySystemNode::initialize() {
   addAttribute(time);
   addAttribute(input_curves);
   addAttribute(output_curves);
+  addAttribute(input_follicles);
 
   // When time is modified, input curve needs to be recalculated
   attributeAffects(time, output_curves);
-
   return MS::kSuccess;
 }
 
 MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
   if (plug == output_curves) {
-    cout << "compute: Plug output_curves is being handled\n";
     MStatus stat;
 
     MDataHandle time_data = data.inputValue(time,&stat);
@@ -124,6 +134,7 @@ MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
     MArrayDataHandle input_array_handle = data.inputArrayValue(input_curves, &stat);
     McheckErr(stat, "\tFailed at getting data.inputValue\n");
 
+    MArrayDataHandle input_array_follicle_handle = data.inputArrayValue(input_follicles, &stat);
     int num_curves = input_array_handle.elementCount();
 
     // HANDLE FIRST FRAME
@@ -150,7 +161,6 @@ MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
       // cout << "Calculating forces for strand " << i;
       // output_array_handle.jumpToElement(i);
       input_array_handle.jumpToElement(i);
-
       MDataHandle input_element_handle = input_array_handle.inputValue(&stat);
       McheckErr(stat, "\tFailed at getting input_element_handle\n");
 
@@ -172,6 +182,18 @@ MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
 
       stat = curve_fn.getCVs(cvs, MSpace::kWorld);
       McheckErr(stat, "\tFailed at getting CVs\n");
+
+      // Update root points to follicles positions
+      input_array_follicle_handle.jumpToElement(i);
+      MDataHandle input_follicle_handle = input_array_follicle_handle.inputValue(&stat);
+      MMatrix follicle_matrix = input_follicle_handle.asMatrix();
+
+      MPoint follicle_position;
+      follicle_position.x = follicle_matrix[3][0];
+      follicle_position.y = follicle_matrix[3][1];
+      follicle_position.z = follicle_matrix[3][2];
+      stat = curve_fn.setCV(0, follicle_position);
+      McheckErr(stat, "Failed setting root point to follicle position\n");
 
       // for every point in each hair (excluding root point)
       for (int p = 1; p < cvs.length(); p++) {

@@ -23,8 +23,9 @@
 
 MObject FurrySystemNode::time;
 MObject FurrySystemNode::input_curves;
-MObject FurrySystemNode::output_curves;
 MObject FurrySystemNode::input_follicles;
+MObject FurrySystemNode::input_sphere_matrix;
+MObject FurrySystemNode::output_curves;
 MTypeId FurrySystemNode::id(0x80000);
 
 FurrySystemNode::FurrySystemNode() {
@@ -100,6 +101,11 @@ MStatus FurrySystemNode::initialize() {
   McheckErr(stat, "Failed to create FOLLICLES\n");
   matrix_attr.setStorable(false);
 
+  // Create sphere matrix attr
+  input_sphere_matrix = matrix_attr.create("input_sphere_matrix", "is");
+  McheckErr(stat, "Failed to create FOLLICLES\n");
+  matrix_attr.setStorable(false);
+
   // Create ouput curves attribute
   output_curves = typed_attr.create("output_curves", "out",
                                    MFnNurbsCurveData::kNurbsCurve, &stat);
@@ -112,8 +118,9 @@ MStatus FurrySystemNode::initialize() {
   // Add attributes to our node
   addAttribute(time);
   addAttribute(input_curves);
-  addAttribute(output_curves);
   addAttribute(input_follicles);
+  addAttribute(input_sphere_matrix);
+  addAttribute(output_curves);
 
   // When time is modified, input curve needs to be recalculated
   attributeAffects(time, output_curves);

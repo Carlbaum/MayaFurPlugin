@@ -26,8 +26,9 @@ public:
   virtual MStatus compute(const MPlug& plug, MDataBlock& data);
 
   static MTypeId id;
-  static MObject input_follicles;
   static MObject input_curves;
+  static MObject input_follicles;
+  static MObject input_sphere_matrix;
   static MObject output_curves;
   static MObject time;
 

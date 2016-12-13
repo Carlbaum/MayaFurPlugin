@@ -10,8 +10,14 @@ proc vector getPosOnSphere(float $r, float $theta, float $phi) {
 createNode FurrySystemNode -n furry;
 connectAttr time1.outTime furry.time;
 
+// create sphere
+CreateNURBSSphere;
+sphere -p 0 0 0 -ax 0 1 0 -ssw 0 -esw 360 -r 1 -d 3 -ut 0 -tol 0.01 -s 8 -nsp 4 -ch 1;
+
+float $length = 10.0;
+int $nrOfKnots = 4;
 float $radius = 1.0;
-int $nrOfCurves = 10;
+int $nrOfCurves = 20;
 int $currentStrandIndex = 0;
 float $angleIterTheta = 2*3.14 / $nrOfCurves;
 float $angleIterPhi = 3.14 / $nrOfCurves;
@@ -38,17 +44,17 @@ for( $i=0; $i<$nrOfCurves; ++$i )
     float $y = $startPos.y;
     float $z = $startPos.z;
 
-    float $x1 = $startPos.x*2.0;
-    float $y1 = $startPos.y*2.0;
-    float $z1 = $startPos.z*2.0;
+    float $x1 = $startPos.x*$length/($nrOfKnots-1);
+    float $y1 = $startPos.y*$length/($nrOfKnots-1);
+    float $z1 = $startPos.z*$length/($nrOfKnots-1);
 
-    float $x2 = $startPos.x*3.0;
-    float $y2 = $startPos.y*3.0;
-    float $z2 = $startPos.z*3.0;
+    float $x2 = $startPos.x*$length/($nrOfKnots-1)*2;
+    float $y2 = $startPos.y*$length/($nrOfKnots-1)*2;
+    float $z2 = $startPos.z*$length/($nrOfKnots-1)*2;
 
-    float $x3 = $startPos.x*4.0;
-    float $y3 = $startPos.y*4.0;
-    float $z3 = $startPos.z*4.0;
+    float $x3 = $startPos.x*$length/($nrOfKnots-1)*3;
+    float $y3 = $startPos.y*$length/($nrOfKnots-1)*3;
+    float $z3 = $startPos.z*$length/($nrOfKnots-1)*3;
 
     //Create a curve and connect it to the hair system as input shape
     curve -p $x $y $z -p $x1 $y1 $z1 -p $x2 $y2 $z2 -p $x3 $y3 $z3;

@@ -28,7 +28,7 @@ FurrySystemNode::FurrySystemNode() {
   // cout << "FurrySystemNode constructor!!\n";
 
   hair_length = 10.f;
-  num_hairs = 2;
+  num_hairs = 100;
   num_hair_points = 4;
   curviness = 1.5f;
   curliness = 1.5f;
@@ -121,6 +121,8 @@ MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
 
 
     int num_curves = input_array_handle.elementCount();
+
+    
 
     // Count the number of CVs
 

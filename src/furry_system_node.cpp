@@ -29,7 +29,7 @@ FurrySystemNode::FurrySystemNode() {
   // cout << "FurrySystemNode constructor!!\n";
 
   hair_length = 10.f;
-  num_hairs = 100;
+  num_hairs = 400;
   num_hair_points = 4;
   curviness = 1.5f;
   curliness = 1.5f;

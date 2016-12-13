@@ -285,6 +285,24 @@ MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
         prev_position = cvs[p]; // TODO: this is the error! Reason that it doesn't update
         // cout << "\t\t\tPos_prev: " << prev_position;
         MPoint new_position = prev_position + 0.01 * velocities[i][p];
+
+        // FOR COLLISION!!!!
+        // MDataHandle input_sphere_matrix_handle = data.inputValue(input_sphere_matrix, &stat);
+        // MMatrix sphere_matrix = input_sphere_matrix_handle.asMatrix();
+        // MPoint sphere_position;
+        // sphere_position.x = sphere_matrix[3][0];
+        // sphere_position.y = sphere_matrix[3][1];
+        // sphere_position.z = sphere_matrix[3][2];
+
+        // MVector offset = new_position - sphere_position;
+        // float magnitude = offset.length();
+
+        // stat = offset.normalize();
+        // McheckErr(stat, "Failed to normalize offset\n");
+        // if (magnitude < 1.0) {
+        //  new_position = offset * 2.0 + sphere_position;
+        // }
+
         stat = curve_fn.setCV(p, new_position);
         McheckErr(stat, "\tFailed at setting CVs\n");
         // cout << "\n\t\t\t\tPos_post: " << new_position << "\n";

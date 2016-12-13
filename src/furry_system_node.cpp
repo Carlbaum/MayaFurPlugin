@@ -18,6 +18,7 @@
 
 #include "furry_system_node.h"
 #include <maya/MFnNurbsCurveData.h>
+#include <maya/MTime.h>
 
 MObject FurrySystemNode::time;
 MObject FurrySystemNode::input_curves;
@@ -111,25 +112,42 @@ MStatus FurrySystemNode::initialize() {
 MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
   if (plug == output_curves) {
     cout << "compute: Plug output_curves is being handled\n";
-
     MStatus stat;
+
+    MDataHandle time_data = data.inputValue(time,&stat);
+    MTime mtime = time_data.asTime();
+    const int frame = (int)mtime.as(MTime::kFilm);
+
     MArrayDataHandle output_array_handle = data.outputArrayValue(output_curves, &stat);
     McheckErr(stat, "\tFailed at getting data.outputValue\n");
 
     MArrayDataHandle input_array_handle = data.inputArrayValue(input_curves, &stat);
     McheckErr(stat, "\tFailed at getting data.inputValue\n");
 
-
     int num_curves = input_array_handle.elementCount();
 
-    
+    // HANDLE FIRST FRAME
+    if (frame < 2) { // TODO output = input!§§
+      for (int i = 0 ; i < num_curves; i++ ) {
+        output_array_handle.jumpToElement(i);
+        input_array_handle.jumpToElement(i);
 
-    // Count the number of CVs
+        MDataHandle input_element_handle = input_array_handle.inputValue(&stat);
+        McheckErr(stat, "\tFailed at getting input_element_handle\n");
+
+        MDataHandle output_element_handle = output_array_handle.outputValue(&stat);
+
+        MObject curve_obj = input_element_handle.asNurbsCurve();
+        output_element_handle.set(curve_obj);
+      }
+      data.setClean(plug);
+      return MS::kSuccess;
+    }
 
     // UPDATE FORCES
     // For every strand i
     for (int i = 0 ; i < num_curves; i++ ) {
-      cout << "Calculating forces for strand " << i;
+      // cout << "Calculating forces for strand " << i;
       // output_array_handle.jumpToElement(i);
       input_array_handle.jumpToElement(i);
 
@@ -157,14 +175,14 @@ MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
 
       // for every point in each hair (excluding root point)
       for (int p = 1; p < cvs.length(); p++) {
-        cout << " and point " << p << "\n";
+        // cout << " and point " << p << "\n";
         // cvs[p] += MPoint(p, 0, 0);
 
         forces[i][p] = MVector(0,0,0); //reset forces
         MPoint current_position = cvs[p];
         // For every spring s whos endpoint is p
         for (int s = 0; s < springs[p-1].size(); s++) {
-          cout << "\tspring " << s << "\n";
+          // cout << "\tspring " << s << "\n";
           // INTERNAL FORCES
           MPoint prev_position; //will be related to the spring point closer to the root
           int prev_point_id   = springs[p-1][s]->p1;
@@ -203,7 +221,7 @@ MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
     // Velocities and positions
     // For every strand i
     for (int i = 0 ; i < num_curves; i++ ) {
-      cout << "Calculating velocities and positions for strand " << i;
+      // cout << "Calculating velocities and positions for strand " << i;
       output_array_handle.jumpToElement(i);
       input_array_handle.jumpToElement(i);
 

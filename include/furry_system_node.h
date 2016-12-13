@@ -13,6 +13,7 @@
 
 #include <maya/MFnUnitAttribute.h>
 #include <maya/MFnTypedAttribute.h>
+#include <maya/MFnMatrixAttribute.h>
 
 class FurrySystemNode : public MPxNode {
 
@@ -25,6 +26,7 @@ public:
   virtual MStatus compute(const MPlug& plug, MDataBlock& data);
 
   static MTypeId id;
+  static MObject input_follicles;
   static MObject input_curves;
   static MObject output_curves;
   static MObject time;

@@ -38,10 +38,10 @@ FurrySystemNode::FurrySystemNode() {
 
   hair_length = 2.f;
   num_hairs = 400;
-  num_hair_points = 16;
+  num_hair_points = 4;
   curviness = 1.5f;
   curliness = 1.5f;
-  delta_time = 0.01f;
+  delta_time = 0.05f;
   current_frame = 1;
 
   //INITIALIZE ARRAYS
@@ -309,7 +309,7 @@ MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
           sphere_position.y = sphere_matrix[3][1];
           sphere_position.z = sphere_matrix[3][2];
 
-          float radius = 1.0f; // Really stupid to place it here, but just for clarity now
+          float radius = 1.01f; // Really stupid to place it here, but just for clarity now
 
           MVector offset = new_position - sphere_position;
           MVector normal = offset.normal();

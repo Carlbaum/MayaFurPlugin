@@ -14,8 +14,8 @@ CreateNURBSSphere;
 // Connect sphere world matrix to our plugin
 connectAttr nurbsSphere1.worldMatrix furry.input_sphere_matrix;
 
-float $length = 10.0;
-int $nrOfKnots = 4;
+float $length = 2.0;
+int $nrOfKnots = 16;
 float $radius = 1.0;
 int $nrOfCurves = 20;
 int $currentStrandIndex = 0;
@@ -36,6 +36,8 @@ for ($i=0; $i<$nrOfCurves; ++$i) {
 
     // get startPos for strand on sphere
     vector $startPos = getPosOnSphere($radius, $i*$angleIterTheta, $j*$angleIterPhi);
+    float $deltaLength = $length / ($nrOfKnots-1);
+    vector $directionOffset = $deltaLength * $startPos;
 
     float $x = $startPos.x;
     float $y = $startPos.y;
@@ -43,9 +45,9 @@ for ($i=0; $i<$nrOfCurves; ++$i) {
 
     string $createCurveString = "curve -p " + $x + " " + $y + " " + $z;
     for ($k=0; $k < $nrOfKnots - 1; ++$k) {
-      float $x = $startPos.x * $length / ($nrOfKnots-1) * ($k + 1);
-      float $y = $startPos.y * $length / ($nrOfKnots-1) * ($k + 1);
-      float $z = $startPos.z * $length / ($nrOfKnots-1) * ($k + 1);
+      float $x = $startPos.x + $directionOffset.x * ($k + 1);
+      float $y = $startPos.y + $directionOffset.y * ($k + 1);
+      float $z = $startPos.z + $directionOffset.z * ($k + 1);
       $createCurveString = $createCurveString + " -p " + $x + " " + $y + " " + $z;
     }
 

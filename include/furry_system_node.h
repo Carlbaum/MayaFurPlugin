@@ -11,10 +11,6 @@
 #include <maya/MFnNurbsCurve.h>
 #include "common.h"
 
-#include <maya/MFnUnitAttribute.h>
-#include <maya/MFnTypedAttribute.h>
-#include <maya/MFnMatrixAttribute.h>
-
 class FurrySystemNode : public MPxNode {
 
 public:
@@ -32,15 +28,18 @@ public:
   static MObject output_curves;
   static MObject time;
 
+  static int current_frame;
+
   std::vector<std::vector<Spring*> > springs;
 	std::vector<MVectorArray> velocities;
 	std::vector<MVectorArray> forces;
 
-	float hair_length;
-	int num_hair_points;
 	int num_hairs;
+  int num_hair_points;
+  float hair_length;
 	float curviness;
-	float curliness;
+  float curliness;
+	float delta_time;
 };
 
 #endif // FURRY_SYSTEM_NODE_H

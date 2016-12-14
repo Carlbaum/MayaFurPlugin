@@ -20,6 +20,9 @@
 #include <maya/MFnNurbsCurveData.h>
 #include <maya/MTime.h>
 #include <maya/MMatrix.h>
+#include <maya/MFnUnitAttribute.h>
+#include <maya/MFnTypedAttribute.h>
+#include <maya/MFnMatrixAttribute.h>
 
 MObject FurrySystemNode::time;
 MObject FurrySystemNode::input_curves;
@@ -28,14 +31,18 @@ MObject FurrySystemNode::input_sphere_matrix;
 MObject FurrySystemNode::output_curves;
 MTypeId FurrySystemNode::id(0x80000);
 
+int FurrySystemNode::current_frame;
+
 FurrySystemNode::FurrySystemNode() {
   // cout << "FurrySystemNode constructor!!\n";
 
-  hair_length = 10.f;
+  hair_length = 2.f;
   num_hairs = 400;
-  num_hair_points = 4;
+  num_hair_points = 16;
   curviness = 1.5f;
   curliness = 1.5f;
+  delta_time = 0.01f;
+  current_frame = 1;
 
   //INITIALIZE ARRAYS
   for (int h = 0; h < num_hairs; h++) {
@@ -144,8 +151,13 @@ MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
     MArrayDataHandle input_array_follicle_handle = data.inputArrayValue(input_follicles, &stat);
     int num_curves = input_array_handle.elementCount();
 
+    if (frame < current_frame) {
+      return MS::kSuccess;
+    }
+    current_frame = frame;
+
     // HANDLE FIRST FRAME
-    if (frame < 2) { // TODO output = input!§§
+    if (frame == 1) {
       for (int i = 0 ; i < num_curves; i++ ) {
         output_array_handle.jumpToElement(i);
         input_array_handle.jumpToElement(i);
@@ -279,29 +291,59 @@ MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
       // for every point in each hair (excluding root point)
       for (int p = 1; p < cvs.length(); p++) {
         // cout << "\t\t\tVel_prev: " << velocities[p];
-        velocities[i][p] += 0.01 * forces[i][p] / 1.0; // assumes ∆t=0.1 and mass = 1
+        velocities[i][p] += delta_time * forces[i][p] / 1.0; // assumes mass = 1
         // cout << "\n\t\t\t\tVel_post: " << velocities[p] << "\n";
         MPoint prev_position;
         prev_position = cvs[p]; // TODO: this is the error! Reason that it doesn't update
         // cout << "\t\t\tPos_prev: " << prev_position;
-        MPoint new_position = prev_position + 0.01 * velocities[i][p];
+        MVector current_velocity = velocities[i][p];
+        MPoint new_position = prev_position + delta_time * current_velocity;
 
-        // FOR COLLISION!!!!
-        // MDataHandle input_sphere_matrix_handle = data.inputValue(input_sphere_matrix, &stat);
-        // MMatrix sphere_matrix = input_sphere_matrix_handle.asMatrix();
-        // MPoint sphere_position;
-        // sphere_position.x = sphere_matrix[3][0];
-        // sphere_position.y = sphere_matrix[3][1];
-        // sphere_position.z = sphere_matrix[3][2];
 
-        // MVector offset = new_position - sphere_position;
-        // float magnitude = offset.length();
+        { // FOR COLLISION!!!!
+          MDataHandle input_sphere_matrix_handle =
+              data.inputValue(input_sphere_matrix, &stat);
+          MMatrix sphere_matrix = input_sphere_matrix_handle.asMatrix();
+          MPoint sphere_position;
+          sphere_position.x = sphere_matrix[3][0];
+          sphere_position.y = sphere_matrix[3][1];
+          sphere_position.z = sphere_matrix[3][2];
 
-        // stat = offset.normalize();
-        // McheckErr(stat, "Failed to normalize offset\n");
-        // if (magnitude < 1.0) {
-        //  new_position = offset * 2.0 + sphere_position;
-        // }
+          float radius = 1.0f; // Really stupid to place it here, but just for clarity now
+
+          MVector offset = new_position - sphere_position;
+          MVector normal = offset.normal();
+          float magnitude = offset.length();
+
+          { // SIGNED DISTANCE METHOD - taken from
+            // www.cs.ubc.ca/~rbridson/docs/cloth2003.pdf
+            // Anticipates collision and tries to adjust velocities correctly
+            float signed_distance = magnitude - radius;
+            float anticipated_signed_distance =
+                signed_distance +
+                delta_time * (current_velocity /*- sphere_velocity*/) *
+                    normal; // the sphere velocity should really be there if it is animated!
+
+            // this all assumes that the sphere doesn't move!
+            // Otherwise sphere_velocity is needed
+            if (anticipated_signed_distance < 0) {
+              float normal_vel = current_velocity * normal;
+              MVector tangential_vel = current_velocity - normal_vel * normal;
+              float new_normal_vel =
+                  normal_vel - anticipated_signed_distance / delta_time;
+              velocities[i][p] = new_normal_vel * normal + tangential_vel;
+
+              // TODO: add the friction
+            }
+          }
+
+          // { // UGLY, BAD & UNSTABLE METHOD! If point is inside sphere,
+          //   // move it outside of the sphere in the direction of the normal.
+          //   if (magnitude < radius) {
+          //     new_position = normal * radius * 1.00001 + sphere_position;
+          //   }
+          // }
+        }
 
         stat = curve_fn.setCV(p, new_position);
         McheckErr(stat, "\tFailed at setting CVs\n");

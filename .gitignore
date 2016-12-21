@@ -1,5 +1,8 @@
 .DS_Store
 
+# For the example file
+*.gif
+
 # Compiled Object files
 *.slo
 *.lo

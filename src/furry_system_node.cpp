@@ -36,12 +36,12 @@ int FurrySystemNode::current_frame;
 FurrySystemNode::FurrySystemNode() {
   // cout << "FurrySystemNode constructor!!\n";
 
-  hair_length = 2.f;
+  hair_length = 0.2f;
   num_hairs = 400;
   num_hair_points = 4;
   curviness = 1.5f;
   curliness = 1.5f;
-  delta_time = 0.05f;
+  delta_time = 0.01f;
   current_frame = 1;
 
   //INITIALIZE ARRAYS
@@ -151,11 +151,6 @@ MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
     MArrayDataHandle input_array_follicle_handle = data.inputArrayValue(input_follicles, &stat);
     int num_curves = input_array_handle.elementCount();
 
-    if (frame < current_frame) {
-      return MS::kSuccess;
-    }
-    current_frame = frame;
-
     // HANDLE FIRST FRAME
     if (frame == 1) {
       for (int i = 0 ; i < num_curves; i++ ) {
@@ -173,6 +168,11 @@ MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
       data.setClean(plug);
       return MS::kSuccess;
     }
+
+    if (frame != current_frame + 1) {
+      return MS::kSuccess;
+    }
+    current_frame = frame;
 
     // UPDATE FORCES
     // For every strand i
@@ -309,7 +309,7 @@ MStatus FurrySystemNode::compute(const MPlug& plug, MDataBlock& data) {
           sphere_position.y = sphere_matrix[3][1];
           sphere_position.z = sphere_matrix[3][2];
 
-          float radius = 1.01f; // Really stupid to place it here, but just for clarity now
+          float radius = 1.05f; // Really stupid to place it here, but just for clarity now
 
           MVector offset = new_position - sphere_position;
           MVector normal = offset.normal();

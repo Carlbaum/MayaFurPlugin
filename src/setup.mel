@@ -15,19 +15,18 @@ CreateNURBSSphere;
 connectAttr nurbsSphere1.worldMatrix furry.input_sphere_matrix;
 
 float $PI = 3.1416;
-float $length = 2.0;
+float $length = 0.2;
 int $nrOfKnots = 4;
 float $radius = 1.0;
-int $nrOfCurves = 20;
+int $nrOfCurves = 40;
 int $currentStrandIndex = 0;
 float $angleIterTheta = 2*$PI / $nrOfCurves;
-float $angleIterPhi = $PI / (4*$nrOfCurves);
+float $angleIterPhi = $PI / ($nrOfCurves);
 
 // loop around z-axis
 for ($i=0; $i<$nrOfCurves; ++$i) {
   // loop over sphere
   for ($j=0; $j<$nrOfCurves; ++$j) {
-    
     //get current index
     $currentStrandIndex = $j + $nrOfCurves*$i;
 

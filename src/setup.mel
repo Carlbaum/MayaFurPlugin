@@ -1,8 +1,8 @@
-// function to get position on sphere from angles
+// function to set position on sphere from angles
 proc vector getPosOnSphere(float $r, float $theta, float $phi) {
-  vector $pos = <<  $r*cos($theta)*sin($phi),
-                    $r*sin($theta)*sin($phi),
-                    $r*cos($phi) >>;
+  vector $pos = <<  $r*sin($theta)*sin($phi),
+                    $r*cos($phi) ,
+                    $r*cos($theta)*sin($phi) >>;
   return $pos;
 }
 
@@ -14,13 +14,14 @@ CreateNURBSSphere;
 // Connect sphere world matrix to our plugin
 connectAttr nurbsSphere1.worldMatrix furry.input_sphere_matrix;
 
-float $length = 2.0;
-int $nrOfKnots = 16;
+float $PI = 3.1416;
+float $length = 0.2;
+int $nrOfKnots = 4;
 float $radius = 1.0;
-int $nrOfCurves = 20;
+int $nrOfCurves = 40;
 int $currentStrandIndex = 0;
-float $angleIterTheta = 2*3.14 / $nrOfCurves;
-float $angleIterPhi = 3.14 / $nrOfCurves;
+float $angleIterTheta = 2*$PI / $nrOfCurves;
+float $angleIterPhi = $PI / ($nrOfCurves);
 
 // loop around z-axis
 for ($i=0; $i<$nrOfCurves; ++$i) {
@@ -35,7 +36,8 @@ for ($i=0; $i<$nrOfCurves; ++$i) {
     connectAttr furry.output_curves[$currentStrandIndex] ($outC+".create");
 
     // get startPos for strand on sphere
-    vector $startPos = getPosOnSphere($radius, $i*$angleIterTheta, $j*$angleIterPhi);
+    vector $startPos = getPosOnSphere($radius, $j*$angleIterTheta, $i*$angleIterPhi);
+
     float $deltaLength = $length / ($nrOfKnots-1);
     vector $directionOffset = $deltaLength * $startPos;
 
